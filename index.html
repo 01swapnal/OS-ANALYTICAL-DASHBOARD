@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OS Analytics Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="dashboard-header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-microchip"></i>
+                <h1>OS Analytics Dashboard</h1>
+            </div>
+            <div class="header-actions">
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <i class="fas fa-palette"></i>
+                </button>
+                <button class="export-btn" onclick="exportReport()">
+                    <i class="fas fa-download"></i> Export
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="nav-section">
+                <h3>Operations</h3>
+                <ul class="nav-list">
+                    <li class="nav-item active" data-section="scheduling" onclick="switchSection('scheduling')">
+                        <i class="fas fa-clock"></i> Scheduling
+                    </li>
+                    <li class="nav-item" data-section="memory" onclick="switchSection('memory')">
+                        <i class="fas fa-memory"></i> Memory
+                    </li>
+                    <li class="nav-item" data-section="deadlock" onclick="switchSection('deadlock')">
+                        <i class="fas fa-exclamation-triangle"></i> Deadlock
+                    </li>
+                    <li class="nav-item" data-section="analytics" onclick="switchSection('analytics')">
+                        <i class="fas fa-chart-line"></i> Analytics
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Control Panel -->
+            <section class="control-panel">
+                <div class="operation-selector">
+                    <label for="operationSelect">Select Operation</label>
+                    <select id="operationSelect" onchange="handleOperationChange()">
+                        <optgroup label="CPU Scheduling">
+                            <option value="fcfs">First Come First Serve (FCFS)</option>
+                            <option value="sjf">Shortest Job First (SJF)</option>
+                            <option value="srtf">Shortest Remaining Time First</option>
+                            <option value="rr">Round Robin</option>
+                            <option value="priority">Priority Scheduling</option>
+                        </optgroup>
+                        <optgroup label="Memory Management">
+                            <option value="firstfit">First Fit Allocation</option>
+                            <option value="bestfit">Best Fit Allocation</option>
+                            <option value="worstfit">Worst Fit Allocation</option>
+                        </optgroup>
+                        <optgroup label="Deadlock Management">
+                            <option value="detection">Deadlock Detection</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div class="process-input-section" id="processInputSection">
+                    <h3>Process Configuration</h3>
+                    <div class="input-grid" id="inputGrid">
+                        <!-- Dynamic inputs based on selected operation -->
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn-primary" onclick="addProcess()">
+                            <i class="fas fa-plus"></i> Add Process
+                        </button>
+                        <button class="btn-secondary" onclick="loadSampleData()">
+                            <i class="fas fa-flask"></i> Load Sample
+                        </button>
+                        <button class="btn-execute" onclick="executeOperation()">
+                            <i class="fas fa-play"></i> Execute
+                        </button>
+                        <button class="btn-clear" onclick="clearAll()">
+                            <i class="fas fa-trash"></i> Clear
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analytics Grid -->
+            <section class="analytics-grid">
+                <!-- Key Metrics Cards -->
+                <div class="metrics-row">
+                    <div class="metric-card primary">
+                        <div class="metric-icon">
+                            <i class="fas fa-stopwatch"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3 id="avgWaitTime">0.0</h3>
+                            <p>Avg Wait Time</p>
+                            <span class="metric-change positive" id="waitTimeChange">+0%</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card secondary">
+                        <div class="metric-icon">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3 id="avgTurnaround">0.0</h3>
+                            <p>Avg Turnaround</p>
+                            <span class="metric-change positive" id="turnaroundChange">+0%</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card tertiary">
+                        <div class="metric-icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3 id="efficiency">100</h3>
+                            <p>CPU Efficiency</p>
+                            <span class="metric-change positive" id="efficiencyChange">+0%</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card quaternary">
+                        <div class="metric-icon">
+                            <i class="fas fa-memory"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3 id="memoryUtil">0</h3>
+                            <p>Memory Usage %</p>
+                            <span class="metric-change positive" id="memoryChange">+0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="charts-section">
+                    <div class="chart-container large">
+                        <div class="chart-header">
+                            <h3>Process Execution Timeline</h3>
+                            <div class="chart-controls">
+                                <button class="chart-btn active" data-view="gantt" onclick="toggleChartView('gantt')">Gantt Chart</button>
+                                <button class="chart-btn" data-view="table" onclick="toggleChartView('table')">Table View</button>
+                            </div>
+                        </div>
+                        <div class="chart-content">
+                            <canvas id="ganttChart"></canvas>
+                            <div id="ganttTable" class="gantt-table-view hidden">
+                                <!-- Gantt table will be generated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-container medium">
+                        <div class="chart-header">
+                            <h3>Performance Distribution</h3>
+                        </div>
+                        <div class="chart-content">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Memory Visualization -->
+                <div class="memory-section">
+                    <div class="memory-container">
+                        <div class="memory-header">
+                            <h3>Memory Allocation Map</h3>
+                            <div class="memory-stats">
+                                <span class="stat">
+                                    <div class="stat-color allocated"></div>
+                                    Allocated: <span id="allocatedMemory">0</span>
+                                </span>
+                                <span class="stat">
+                                    <div class="stat-color free"></div>
+                                    Free: <span id="freeMemory">100</span>
+                                </span>
+                                <span class="stat">
+                                    <div class="stat-color fragmented"></div>
+                                    Fragmented: <span id="fragmentedMemory">0</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="memory-visualization" id="memoryVisualization">
+                            <!-- Memory blocks will be generated here -->
+                        </div>
+                    </div>
+
+                    <div class="algorithm-comparison">
+                        <h3>Algorithm Comparison</h3>
+                        <canvas id="comparisonChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Process Table -->
+                <div class="process-table-container">
+                    <div class="table-header">
+                        <h3>Process Details</h3>
+                        <div class="table-controls">
+                            <input type="search" placeholder="Search processes..." id="processSearch" oninput="filterProcessTable()">
+                            <button class="table-btn" onclick="sortTable()">
+                                <i class="fas fa-sort"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="processTable" class="data-table">
+                            <thead>
+                                <tr id="tableHeaders">
+                                    <!-- Dynamic headers based on operation -->
+                                </tr>
+                            </thead>
+                            <tbody id="processTableBody">
+                                <!-- Process data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Deadlock Analysis -->
+                <div class="deadlock-section hidden" id="deadlockSection">
+                    <div class="deadlock-graph">
+                        <h3>Resource Allocation Graph</h3>
+                        <div id="resourceGraph" class="graph-container">
+                            <!-- Graph visualization -->
+                        </div>
+                    </div>
+                    <div class="deadlock-matrix">
+                        <h3>Allocation Matrix</h3>
+                        <div id="allocationMatrix" class="matrix-container">
+                            <!-- Matrix visualization -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-spinner">
+            <i class="fas fa-cog fa-spin"></i>
+            <p>Processing...</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
